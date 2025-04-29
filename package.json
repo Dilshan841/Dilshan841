@@ -1,0 +1,14 @@
+{
+  "name": "dilshan-md-bot",
+  "version": "1.0.0",
+  "description": "Simple WhatsApp Bot by Dilshan Ashinsa",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "^6.7.9",
+    "express": "^4.18.2",
+    "qrcode-terminal": "^0.12.0"
+  }
+}
