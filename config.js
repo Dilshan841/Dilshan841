@@ -1,31 +1,81 @@
-const fs = require("fs");
-if (fs.existsSync("config.env")) require("dotenv").config({ path: "./config.env" });
+const { makeWASocket, useMultiFileAuthState, fetchLatestBaileysVersion } = require('@whiskeysockets/baileys');
+const pino = require('pino');
+const express = require('express');
+const fs = require('fs');
 
-function convertToBool(text, fault = "true") {
-  return text === fault ? true : false;
-}
+// Logging setup
+const logger = pino({ level: 'info' });
 
-module.exports = {
-  SESSION_ID: process.env.SESSION_ID || "",
+const app = express();
 
-  // Bot Prefix
-  PREFIX: process.env.PREFIX || ".",
+// Bot's configuration
+const SESSION_ID = 'example_session_id';  // ඔබගේ session ID එක මෙහි දාන්න
+const ALIVE_IMG = process.env.ALIVE_IMG || 'https://example.com/your-image-url.jpg'; // Alive status එකේ image URL එක
+const ALIVE_MSG = process.env.ALIVE_MSG || '👋Hello, I am DILSHAN MD Bot!'; // Alive status message එක
+const OWNER_NUMBER = '94772194789';  // Owner ගේ number එක
+const BOT_NAME = 'DILSHAN-MD';  // Bot එකේ නම
 
-  // Alive message image
-  ALIVE_IMG: process.env.ALIVE_IMG || "https://telegra.ph/file/265c6720fc6d6a2f6e1c6.jpg",
+// Session එකේ path එක
+const SESSION_DIR = `./sessions/SESSION_ID`;
 
-  // Alive message text
-  ALIVE_MSG:
-    process.env.ALIVE_MSG ||
-    "👋 Hello! I’m *DILSHAN-MD*, your WhatsApp bot assistant. How can I help you today? 😊",
+// WhatsApp Bot එක සම්බන්ධ කිරීමේ function එක
+const connectBot = async () => 
+  const  state, saveCreds  = await useMultiFileAuthState(SESSION_DIR);
 
-  // Bot Identity
-  BOT_NAME: process.env.BOT_NAME || "DILSHAN-MD",
-  OWNER_NAME: process.env.OWNER_NAME || "Dilshan Ashinsa",
-  OWNER_NUMBER: process.env.OWNER_NUMBER || "94772194789",
+  const sock = makeWASocket(
+    auth: state,
+    printQRInTerminal: true,
+  );
 
-  // Port
-  PORT: process.env.PORT || "3000",
+  sock.ev.on('creds.update', saveCreds);
 
-  // Other config options can go here...
+  sock.ev.on('messages.upsert', async (m) => 
+    const msg = m.messages[0];
+    if (!msg.message) return;
+
+    const text = msg.message.conversation || msg.message.extendedTextMessage?.text;
+
+    if (text        text.toLowerCase() === '.menu') 
+      // '.menu' ටයිප් කරන විට menu එක පවරන්න
+      await sock.sendMessage(msg.key.remoteJid, 
+        text: `
+👋 _𝐇𝐄𝐋𝐋𝐎𝐖_ 👉{BOT_NAME}👈
+🫟 *Welcome to ${BOT_NAME}* 🫟
+
+╭─「 ꜱᴛᴀᴛᴜꜱ 」
+│👾 Bot:{BOT_NAME}  
+│👤 User: msg.pushName || 'User'  
+│☎️ Owner:{OWNER_NUMBER}  
+│⏰ Uptime: X hours  
+╰─────────────
+Type a number to choose a menu.
+1. Owner Menu  
+2. Group Menu  
+3. Fun Menu  
+...
+`
+      });
+    }
+  });
+
+  sock.ev.on('connection.update', (update) => {
+    const { connection, qr } = update;
+    if (qr) {
+      // Connection එක update වීමේදී QR code එක generate කරන්න
+      qr.generate(qr, { small: true });
+    }
+    if (connection === 'close') {
+      // Connection එක close වුනොත් නැවත connect කරන්න
+      connectBot();
+    }
+  });
+
+  app.listen(process.env.PORT || 3000, () => {
+    console.log('Server is running...');
+  });
+
+  return sock;
 };
+
+// Bot එක connect කිරීම
+connectBot();
