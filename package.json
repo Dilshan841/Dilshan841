@@ -13,7 +13,7 @@
     "@adiwajshing/keyed-db": "^0.2.4",
     "pino": "^9.6.0",
     "pm2": "^6.0.5",
-    "util": "^0.12.4",
+    "util": "^0.12.5",
     "express": "^4.18.2",
     "axios": "^1.2.5",
     "file_size_url": "^1.0.6",
