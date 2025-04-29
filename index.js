@@ -3,7 +3,7 @@ const { Boom } = require('@hapi/boom');
 const qrcode = require('qrcode-terminal');
 require('dotenv').config();
 
-const OWNER_NUMBER = process.env.OWNER_NUMBER || '94771234567'; // ඔබගේ WhatsApp අංකය
+const OWNER_NUMBER = process.env.OWNER_NUMBER || '94772194789'; // ඔබගේ WhatsApp අංකය
 
 async function startBot() {
   const { state, saveCreds } = await useMultiFileAuthState('auth_info_baileys');
@@ -52,7 +52,7 @@ async function startBot() {
     const msg = m.messages[0];
     if (!msg.key.fromMe && m.type === 'notify') {
       await sock.readMessages([msg.key]);
-      await sock.sendMessage(msg.key.remoteJid, { text: '👋 හෙලෝ! මම සක්‍රීයයි.' });
+      await sock.sendMessage(msg.key.remoteJid, { text: '👋 Hello DILSHAN MD BOT CONNECTED DONE✅.' });
     }
   });
 }
