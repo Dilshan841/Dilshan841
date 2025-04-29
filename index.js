@@ -23,7 +23,7 @@ async function connectBot() {
     const text = msg.message.conversation || msg.message.extendedTextMessage?.text;
 
     if (text && text.toLowerCase() === '.menu') {
-      await sock.sendMessage(msg.key.remoteJid, { text: `👋 හෙලෝ! මම ${BOT_NAME} 😎` });
+      await sock.sendMessage(msg.key.remoteJid, { text: `👋 HELLO! DILSHAN MD BOT ${BOT_NAME} 😎` });
     }
   });
 
@@ -42,13 +42,33 @@ async function connectBot() {
     }
   });
 }
+module.exports = {
+  name: 'menu',
+  description: 'Show main menu',
+  async execute(sock, m, args) {
+    const menuText = `
+*👋 _𝐇𝐄𝐋𝐋𝐎𝐖_* 👉No name👈
+🫟 *Wᴇʟᴄᴏᴍᴇ Tᴏ DILSHAN-MD*🫟
 
-app.get('/', (req, res) => {
-  res.send('Dilshan WhatsApp Bot සාර්ථකව ක්‍රියාත්මක වේ!');
-});
+*╭─「 ꜱᴛᴀᴛᴜꜱ ᴅᴇᴛᴀɪʟꜱ 」*
+*│*👾 *\`Bot\`*= *DILSHAN-MD*
+*│*👤 *\`User\`*= 👉No name👈
+*│*☎️ *\`Owner Number\`*= 94772194789
+*│*⏰ *\`Uptime\`*= Live
+*│*✒️ *\`Prefix\`*= . 
+*╰──────────●●►*
 
-connectBot();
+🔢 Reply with numbers below:
 
-app.listen(process.env.PORT || 3000, () => {
-  console.log('🌐 Server ක්‍රියාත්මක වේ...');
-});
+1 │❯❯◦ OWNER MENU
+2 │❯❯◦ AI MENU
+3 │❯❯◦ FUN MENU
+4 │❯❯◦ GROUP MENU
+5 │❯❯◦ DOWNLOAD MENU
+6 │❯❯◦ SEARCH MENU
+
+*㋛ POWERED BY DILSHAN 〽️MD*
+    `;
+    await sock.sendMessage(m.key.remoteJid, { text: menuText }, { quoted: m });
+  }
+};
