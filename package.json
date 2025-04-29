@@ -1,14 +1,27 @@
 {
   "name": "dilshan-md-bot",
   "version": "1.0.0",
-  "description": "Simple WhatsApp Bot by Dilshan Ashinsa",
+  "description": "A WhatsApp bot created using Node.js",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "pm2 start index.js --deep-monitoring --attach --name wabot",
+    "stop": "pm2 stop wabot",
+    "restart": "pm2 restart wabot"
   },
   "dependencies": {
     "@whiskeysockets/baileys": "^6.7.9",
+    "@adiwajshing/keyed-db": "^0.2.4",
+    "pino": "^9.6.0",
+    "pm2": "^6.0.5",
+    "util": "^0.12.4",
     "express": "^4.18.2",
+    "axios": "^1.2.5",
+    "file_size_url": "^1.0.6",
+    "fs-extra": "^11.1.0",
+    "path": "^0.12.7",
+    "node-fetch": "^2.6.1",
+    "megajs": "^1.1.0",
+    "vm": "^0.1.0",
     "qrcode-terminal": "^0.12.0"
   }
 }
