@@ -38,3 +38,17 @@ async function connectBot() {
         connectBot();
       }
     } else if (connection === 'open') {
+      console.log('✅ බොට් එක සාර්ථකව සම්බන්ධ වුණා!');
+    }
+  });
+}
+
+app.get('/', (req, res) => {
+  res.send('Dilshan WhatsApp Bot සාර්ථකව ක්‍රියාත්මක වේ!');
+});
+
+connectBot();
+
+app.listen(process.env.PORT || 3000, () => {
+  console.log('🌐 Server ක්‍රියාත්මක වේ...');
+});
