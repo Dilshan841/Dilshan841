@@ -16,7 +16,51 @@ async function startBot() {
   });
 
   sock.ev.on('creds.update', saveCreds);
+  sock.ev.on('messages.upsert', async m => {
+  const msg = m.messages[0];
+  if (!msg.message) return;
 
+  const text = msg.message.conversation || msg.message.extendedTextMessage?.text;
+  const sender = msg.key.remoteJid;
+
+  if (!text) return;
+
+  const command = text.trim().toLowerCase();
+
+  switch (command) {
+    case '.menu':
+      await sock.sendMessage(sender, {
+        text: `
+╭───❖  *📜 DILSHAN MD BOT MENU*  ❖───╮
+│
+│  🧾 *Available Commands:*
+│
+│  📌 .menu - Show this menu
+│  📌 .alive - Check bot status
+│  📌 .owner - Show owner info
+│
+╰──────────────────────────────╯
+        `
+      });
+      break;
+
+    case '.alive':
+      await sock.sendMessage(sender, {
+        text: '✅ *DILSHAN-MD Bot is Alive!*'
+      });
+      break;
+
+    case '.owner':
+      await sock.sendMessage(sender, {
+        text: '👤 *Owner:* Dilshan Ashinsa\n📞 *Contact:* +94772194789'
+      });
+      break;
+
+    default:
+      // Optional: Handle unknown commands
+      break;
+  }
+});
   sock.ev.on('connection.update', async (update) => {
     const { connection, lastDisconnect, qr } = update;
 
