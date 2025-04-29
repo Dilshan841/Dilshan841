@@ -1,33 +1,40 @@
-const { Client, LocalAuth } = require('whatsapp-web.js');
+const express = require('express');
+const { default: makeWASocket, useMultiFileAuthState, DisconnectReason } = require('@whiskeysockets/baileys');
+const { Boom } = require('@hapi/boom');
 const qrcode = require('qrcode-terminal');
+const { SESSION_ID, BOT_NAME, OWNER_NAME, OWNER_NUMBER } = require('./config');
 
-// බොට් එක set කරනවා
-const client = new Client({
-  authStrategy: new LocalAuth()
-});
+const app = express();
 
-// QR Code එකක් generate කරනවා
-client.on('qr', qr => {
-  qrcode.generate(qr, { small: true });
-  console.log('📱 WhatsApp එකෙන් QR කේතය scan කරන්න!');
-});
+async function connectBot() {
+  const { state, saveCreds } = await useMultiFileAuthState('session');
 
-// බොට් එක සූදානම් වෙද්දී
-client.on('ready', () => {
-  console.log('🤖 DILSHAN MDගේ WhatsApp බොට් එක සූදානම්!');
-});
+  const sock = makeWASocket({
+    auth: state,
+    printQRInTerminal: true
+  });
 
-// Message එකක් ලැබුනොත්
-client.on('message', message => {
-  const text = message.body.toLowerCase(); // message එක lowercase කරන්න
+  sock.ev.on('creds.update', saveCreds);
 
-  if (text === 'hi') {
-    message.reply('හෙලෝ! මම DILSHAN MDගේ බොට් එක 😄');
-  } else if (text === 'help') {
-    message.reply('ඔයාට උදව් ඕනෙ නම්, මෙන්න command list එක:\n- hi\n- help\n- about');
-  } else if (text === 'about') {
-    message.reply('මම හදලා තියෙන්නෙ DILSHAN MD විසින්! 🚀');
-  } else {
-    message.reply('මට තේරෙන්නේ නෑ. "help" කියලා type කරන්න');
-  }
-});
+  sock.ev.on('messages.upsert', async m => {
+    const msg = m.messages[0];
+    if (!msg.message) return;
+
+    const text = msg.message.conversation || msg.message.extendedTextMessage?.text;
+
+    if (text && text.toLowerCase() === '.menu') {
+      await sock.sendMessage(msg.key.remoteJid, { text: `👋 හෙලෝ! මම ${BOT_NAME} 😎` });
+    }
+  });
+
+  sock.ev.on('connection.update', (update) => {
+    const { connection, lastDisconnect, qr } = update;
+    if (qr) {
+      qrcode.generate(qr, { small: true });
+    }
+    if (connection === 'close') {
+      const shouldReconnect = (lastDisconnect.error = Boom)?.output?.statusCode !== DisconnectReason.loggedOut;
+      if (shouldReconnect) {
+        connectBot();
+      }
+    } else if (connection === 'open') {
