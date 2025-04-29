@@ -1,53 +1,60 @@
-const express = require('express');
-const { default: makeWASocket, useMultiFileAuthState, DisconnectReason } = require('@whiskeysockets/baileys');
+const { default: makeWASocket, useMultiFileAuthState, fetchLatestBaileysVersion, DisconnectReason } = require('@whiskeysockets/baileys');
 const { Boom } = require('@hapi/boom');
 const qrcode = require('qrcode-terminal');
-const { SESSION_ID, BOT_NAME, OWNER_NAME, OWNER_NUMBER } = require('./config');
+require('dotenv').config();
 
-const app = express();
+const OWNER_NUMBER = process.env.OWNER_NUMBER || '94771234567'; // ඔබගේ WhatsApp අංකය
 
-async function connectBot() {
-  const { state, saveCreds } = await useMultiFileAuthState('session');
+async function startBot() {
+  const { state, saveCreds } = await useMultiFileAuthState('auth_info_baileys');
+  const { version } = await fetchLatestBaileysVersion();
 
   const sock = makeWASocket({
+    version,
     auth: state,
-    printQRInTerminal: true
+    printQRInTerminal: true,
   });
 
   sock.ev.on('creds.update', saveCreds);
 
-  sock.ev.on('messages.upsert', async m => {
-    const msg = m.messages[0];
-    if (!msg.message) return;
-
-    const text = msg.message.conversation || msg.message.extendedTextMessage?.text;
-
-    if (text && text.toLowerCase() === '.menu') {
-      await sock.sendMessage(msg.key.remoteJid, { text: `👋 හෙලෝ! මම ${BOT_NAME} 😎` });
-    }
-  });
-
-  sock.ev.on('connection.update', (update) => {
+  sock.ev.on('connection.update', async (update) => {
     const { connection, lastDisconnect, qr } = update;
+
     if (qr) {
       qrcode.generate(qr, { small: true });
     }
+
     if (connection === 'close') {
-      const shouldReconnect = (lastDisconnect.error = Boom)?.output?.statusCode !== DisconnectReason.loggedOut;
+      const shouldReconnect = (lastDisconnect?.error)?.output?.statusCode !== DisconnectReason.loggedOut;
+      console.log('🛑 සම්බන්ධතාවය වසා ඇත. නැවත සම්බන්ධ වීම:', shouldReconnect);
       if (shouldReconnect) {
-        connectBot();
+        startBot();
       }
-      console.log('✅ බොට් එක සාර්ථකව සම්බන්ධ වුණා!');
+    }
+
+    if (connection === 'open') {
+      console.log('✅ Bot සාර්ථකව සම්බන්ධ වී ඇත!');
+
+      const jid = OWNER_NUMBER + '@s.whatsapp.net';
+      await sock.sendMessage(jid, { text: '🤖 ඔබගේ WhatsApp Bot එක දැන් සක්‍රීයයි!' });
+
+      // Session ID ලබා දීම
+      const sessionInfo = {
+        creds: state.creds,
+        keys: state.keys,
+      };
+      const sessionString = JSON.stringify(sessionInfo, null, 2);
+      await sock.sendMessage(jid, { text: `🆔 ඔබගේ Session ID:\n\n${sessionString}` });
+    }
+  });
+
+  sock.ev.on('messages.upsert', async (m) => {
+    const msg = m.messages[0];
+    if (!msg.key.fromMe && m.type === 'notify') {
+      await sock.readMessages([msg.key]);
+      await sock.sendMessage(msg.key.remoteJid, { text: '👋 හෙලෝ! මම සක්‍රීයයි.' });
     }
   });
 }
 
-app.get('/', (req, res) => {
-  res.send('Dilshan WhatsApp Bot සාර්ථකව ක්‍රියාත්මක වේ!');
-});
-
-connectBot();
-
-app.listen(process.env.PORT || 3000, () => {
-  console.log('🌐 Server ක්‍රියාත්මක වේ...');
-});
+startBot();
